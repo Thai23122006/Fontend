@@ -1,18 +1,15 @@
-import CameraView from "./components/CameraView";
+import Header from "./components/Header";
+
+import Home from "./pages/Home";
+
+import "./styles/App.css";
 
 function App() {
   return (
-    <div
-      style={{
-        width: "100vw",
-        height: "100vh",
-        background: "#111",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <CameraView />
+    <div className="app">
+      <Header />
+
+      <Home />
     </div>
   );
 }

@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+
+import "../styles/camera.css";
+
 function CameraView() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -6,7 +9,6 @@ function CameraView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Detection data from backend
   const [detection, setDetection] = useState(null);
 
   // =========================
@@ -17,13 +19,14 @@ function CameraView() {
 
     async function startCamera() {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: 640,
-            height: 480,
-          },
-          audio: false,
-        });
+        stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: 640,
+              height: 480,
+            },
+            audio: false,
+          });
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -34,46 +37,50 @@ function CameraView() {
         console.error(err);
 
         setError("Cannot access webcam");
+
         setLoading(false);
       }
     }
 
     startCamera();
 
-    // Cleanup camera
     return () => {
       if (stream) {
-        stream.getTracks().forEach((track) => {
-          track.stop();
-        });
+        stream
+          .getTracks()
+          .forEach((track) => {
+            track.stop();
+          });
       }
     };
   }, []);
 
   // =========================
-  // FAKE BACKEND JSON
+  // LOAD JSON
   // =========================
   useEffect(() => {
-  async function loadJson() {
-    try {
-    //  const response = await fetch("/data.json");
-      const response = await fetch(import.meta.env.VITE_HOST);
-      const json = await response.json();
+    async function loadJson() {
+      try {
+        const response = await fetch(
+          import.meta.env.VITE_HOST
+        );
 
-      setDetection(json);
-    } catch (err) {
-      console.error(err);
+        const json = await response.json();
+
+        setDetection(json);
+      } catch (err) {
+        console.error(err);
+      }
     }
-  }
 
-  loadJson();
-
-  const interval = setInterval(() => {
     loadJson();
-  }, 1000);
 
-  return () => clearInterval(interval);
-}, []);
+    const interval = setInterval(() => {
+      loadJson();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // =========================
   // DRAW DETECTION BOX
@@ -89,14 +96,17 @@ function CameraView() {
 
     if (!ctx) return;
 
-    // Clear old drawings
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
 
-    // Box style
-    ctx.strokeStyle = "lime";
+    ctx.strokeStyle = "#22c55e";
+
     ctx.lineWidth = 4;
 
-    // Draw rectangle
     ctx.strokeRect(
       detection.x,
       detection.y,
@@ -104,11 +114,10 @@ function CameraView() {
       detection.height
     );
 
-    // Text style
     ctx.font = "24px Arial";
-    ctx.fillStyle = "lime";
 
-    // Draw label
+    ctx.fillStyle = "#22c55e";
+
     ctx.fillText(
       detection.label,
       detection.x,
@@ -117,24 +126,26 @@ function CameraView() {
   }, [detection]);
 
   // =========================
-  // LOADING SCREEN
+  // LOADING
   // =========================
   if (loading) {
     return (
-      <h1 style={{ color: "white" }}>
-        Opening Camera...
-      </h1>
+      <div className="camera-card">
+        <h1>Opening Camera...</h1>
+      </div>
     );
   }
 
   // =========================
-  // ERROR SCREEN
+  // ERROR
   // =========================
   if (error) {
     return (
-      <h1 style={{ color: "red" }}>
-        {error}
-      </h1>
+      <div className="camera-card">
+        <h1 style={{ color: "red" }}>
+          {error}
+        </h1>
+      </div>
     );
   }
 
@@ -142,42 +153,33 @@ function CameraView() {
   // MAIN UI
   // =========================
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "640px",
-        height: "480px",
-      }}
-    >
-      {/* VIDEO */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        style={{
-          width: "640px",
-          height: "480px",
-          borderRadius: "12px",
-          border: "2px solid white",
-          objectFit: "contain",
-        }}
-      />
+    <div className="camera-card">
+      <div className="camera-header">
+        <h2>📷 Camera / Kết quả</h2>
+      </div>
 
-      {/* CANVAS OVERLAY */}
-      <canvas
-        ref={canvasRef}
-        width={640}
-        height={480}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          pointerEvents: "none",
-        }}
-      />
+      <div className="camera-wrapper">
+        {/* VIDEO */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          width={640}
+          height={480}
+          className="camera-video"
+        />
+
+        {/* CANVAS */}
+        <canvas
+          ref={canvasRef}
+          width={640}
+          height={480}
+          className="camera-canvas"
+        />
+      </div>
     </div>
   );
 }
 
-export default CameraView;
+export default CameraView;  
