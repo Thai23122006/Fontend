@@ -1,0 +1,54 @@
+{
+  "rooms": [
+    {
+      "row": 6,
+      "col": 16,
+      "type": "wall"
+    },
+    {
+      "row": 6,
+      "col": 17,
+      "type": "wall"
+    },
+    {
+      "row": 6,
+      "col": 18,
+      "type": "bedroom"
+    },
+    {
+      "row": 6,
+      "col": 19,
+      "type": "bedroom"
+    },
+    {
+      "row": 6,
+      "col": 20,
+      "type": "bedroom"
+    },
+    {
+      "row": 7,
+      "col": 16,
+      "type": "wall"
+    },
+    {
+      "row": 7,
+      "col": 17,
+      "type": "wall"
+    },
+    {
+      "row": 7,
+      "col": 18,
+      "type": "bedroom"
+    },
+    {
+      "row": 7,
+      "col": 19,
+      "type": "bedroom"
+    },
+    {
+      "row": 7,
+      "col": 20,
+      "type": "bedroom"
+    }
+  ]
+}

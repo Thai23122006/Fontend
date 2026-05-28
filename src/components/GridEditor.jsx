@@ -1,11 +1,15 @@
-import { useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 function GridEditor() {
   const rows = 100;
   const cols = 100;
 
-  // grid
-  const [grid, setGrid] = useState(
+  // create empty grid
+  const createEmptyGrid = () =>
     Array(rows)
       .fill(null)
       .map(() =>
@@ -14,7 +18,11 @@ function GridEditor() {
           .map(() => ({
             type: null,
           }))
-      )
+      );
+
+  // grid
+  const [grid, setGrid] = useState(
+    createEmptyGrid()
   );
 
   // zoom
@@ -29,7 +37,42 @@ function GridEditor() {
   const [selectedTool, setSelectedTool] =
     useState("wall");
 
-  // excel column labels
+  // load json from backend
+  useEffect(() => {
+    async function loadHouse() {
+      try {
+        const res = await fetch(
+          "http://localhost:5000/load-house"
+        );
+
+        const parsed =
+          await res.json();
+
+        const newGrid =
+          createEmptyGrid();
+
+        parsed.rooms.forEach(
+          (room) => {
+            newGrid[room.row][
+              room.col
+            ] = {
+              type: room.type,
+            };
+          }
+        );
+
+        setGrid(newGrid);
+      } catch (error) {
+        console.log(
+          "No saved json yet"
+        );
+      }
+    }
+
+    loadHouse();
+  }, []);
+
+  // excel labels
   const columnLabels = useMemo(() => {
     return Array(cols)
       .fill(null)
@@ -39,26 +82,73 @@ function GridEditor() {
 
         while (num >= 0) {
           result =
-            String.fromCharCode((num % 26) + 65) +
-            result;
+            String.fromCharCode(
+              (num % 26) + 65
+            ) + result;
 
-          num = Math.floor(num / 26) - 1;
+          num =
+            Math.floor(num / 26) -
+            1;
         }
 
         return result;
       });
   }, []);
 
+  // save json to backend
+  async function saveToBackend() {
+    const rooms = [];
+
+    grid.forEach(
+      (row, rowIndex) => {
+        row.forEach(
+          (cell, colIndex) => {
+            if (cell.type) {
+              rooms.push({
+                row: rowIndex,
+                col: colIndex,
+                type: cell.type,
+              });
+            }
+          }
+        );
+      }
+    );
+
+    const jsonData = {
+      rooms,
+    };
+
+    await fetch(
+      "http://localhost:5000/save-house",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+        body: JSON.stringify(
+          jsonData
+        ),
+      }
+    );
+
+    alert("Saved!");
+  }
+
   // paint
   function paintCell(row, col) {
     setGrid((prev) => {
       const newGrid = [...prev];
 
-      newGrid[row] = [...newGrid[row]];
+      newGrid[row] = [
+        ...newGrid[row],
+      ];
 
       newGrid[row][col] = {
         type:
-          selectedTool === "erase"
+          selectedTool ===
+          "erase"
             ? null
             : selectedTool,
       };
@@ -68,17 +158,23 @@ function GridEditor() {
   }
 
   // drag paint
-  function handleMouseEnter(row, col) {
+  function handleMouseEnter(
+    row,
+    col
+  ) {
     if (!isMouseDown) return;
 
     setGrid((prev) => {
       const newGrid = [...prev];
 
-      newGrid[row] = [...newGrid[row]];
+      newGrid[row] = [
+        ...newGrid[row],
+      ];
 
       newGrid[row][col] = {
         type:
-          selectedTool === "erase"
+          selectedTool ===
+          "erase"
             ? null
             : selectedTool,
       };
@@ -87,7 +183,7 @@ function GridEditor() {
     });
   }
 
-  // zoom with ctrl + wheel
+  // zoom
   function handleWheel(e) {
     if (!e.ctrlKey) return;
 
@@ -106,17 +202,7 @@ function GridEditor() {
 
   // clear
   function clearGrid() {
-    setGrid(
-      Array(rows)
-        .fill(null)
-        .map(() =>
-          Array(cols)
-            .fill(null)
-            .map(() => ({
-              type: null,
-            }))
-        )
-    );
+    setGrid(createEmptyGrid());
   }
 
   return (
@@ -144,64 +230,77 @@ function GridEditor() {
               gridTemplateColumns: `60px repeat(${cols}, ${cellSize}px)`,
             }}
           >
-            {/* top left */}
+            {/* corner */}
             <div className="corner-cell" />
 
             {/* columns */}
-            {columnLabels.map((label) => (
-              <div
-                key={label}
-                className="header-cell"
-                style={{
-                  width: cellSize,
-                  height: 40,
-                }}
-              >
-                {label}
-              </div>
-            ))}
-
-            {/* rows */}
-            {grid.map((row, rowIndex) => (
-              <>
-                {/* row number */}
+            {columnLabels.map(
+              (label) => (
                 <div
-                  key={`row-${rowIndex}`}
-                  className="row-header"
+                  key={label}
+                  className="header-cell"
                   style={{
-                    height: cellSize,
+                    width: cellSize,
+                    height: 40,
                   }}
                 >
-                  {rowIndex + 1}
+                  {label}
                 </div>
+              )
+            )}
 
-                {/* cells */}
-                {row.map((cell, colIndex) => (
+            {/* rows */}
+            {grid.map(
+              (row, rowIndex) => (
+                <>
+                  {/* row number */}
                   <div
-                    key={`${rowIndex}-${colIndex}`}
-                    className={`cell ${
-                      cell.type || ""
-                    }`}
+                    key={`row-${rowIndex}`}
+                    className="row-header"
                     style={{
-                      width: cellSize,
-                      height: cellSize,
+                      height:
+                        cellSize,
                     }}
-                    onMouseDown={() =>
-                      paintCell(
-                        rowIndex,
-                        colIndex
-                      )
-                    }
-                    onMouseEnter={() =>
-                      handleMouseEnter(
-                        rowIndex,
-                        colIndex
-                      )
-                    }
-                  />
-                ))}
-              </>
-            ))}
+                  >
+                    {rowIndex + 1}
+                  </div>
+
+                  {/* cells */}
+                  {row.map(
+                    (
+                      cell,
+                      colIndex
+                    ) => (
+                      <div
+                        key={`${rowIndex}-${colIndex}`}
+                        className={`cell ${
+                          cell.type ||
+                          ""
+                        }`}
+                        style={{
+                          width:
+                            cellSize,
+                          height:
+                            cellSize,
+                        }}
+                        onMouseDown={() =>
+                          paintCell(
+                            rowIndex,
+                            colIndex
+                          )
+                        }
+                        onMouseEnter={() =>
+                          handleMouseEnter(
+                            rowIndex,
+                            colIndex
+                          )
+                        }
+                      />
+                    )
+                  )}
+                </>
+              )
+            )}
           </div>
         </div>
 
@@ -209,9 +308,18 @@ function GridEditor() {
         <div className="tool-panel">
           <h3>Tool Panel</h3>
 
+          {/* WALL */}
           <button
+            className={`tool-btn wall-btn ${
+              selectedTool ===
+              "wall"
+                ? "active-tool"
+                : ""
+            }`}
             onClick={() =>
-              setSelectedTool("wall")
+              setSelectedTool(
+                "wall"
+              )
             }
           >
             Wall
@@ -220,9 +328,18 @@ function GridEditor() {
           <br />
           <br />
 
+          {/* BEDROOM */}
           <button
+            className={`tool-btn bedroom-btn ${
+              selectedTool ===
+              "bedroom"
+                ? "active-tool"
+                : ""
+            }`}
             onClick={() =>
-              setSelectedTool("bedroom")
+              setSelectedTool(
+                "bedroom"
+              )
             }
           >
             Bedroom
@@ -231,9 +348,18 @@ function GridEditor() {
           <br />
           <br />
 
+          {/* KITCHEN */}
           <button
+            className={`tool-btn kitchen-btn ${
+              selectedTool ===
+              "kitchen"
+                ? "active-tool"
+                : ""
+            }`}
             onClick={() =>
-              setSelectedTool("kitchen")
+              setSelectedTool(
+                "kitchen"
+              )
             }
           >
             Kitchen
@@ -242,9 +368,18 @@ function GridEditor() {
           <br />
           <br />
 
+          {/* BATHROOM */}
           <button
+            className={`tool-btn bathroom-btn ${
+              selectedTool ===
+              "bathroom"
+                ? "active-tool"
+                : ""
+            }`}
             onClick={() =>
-              setSelectedTool("bathroom")
+              setSelectedTool(
+                "bathroom"
+              )
             }
           >
             Bathroom
@@ -253,9 +388,18 @@ function GridEditor() {
           <br />
           <br />
 
+          {/* DOOR */}
           <button
+            className={`tool-btn door-btn ${
+              selectedTool ===
+              "door"
+                ? "active-tool"
+                : ""
+            }`}
             onClick={() =>
-              setSelectedTool("door")
+              setSelectedTool(
+                "door"
+              )
             }
           >
             Door
@@ -264,10 +408,18 @@ function GridEditor() {
           <br />
           <br />
 
+          {/* ERASE */}
           <button
-            className="erase-btn"
+            className={`tool-btn erase-btn ${
+              selectedTool ===
+              "erase"
+                ? "active-tool"
+                : ""
+            }`}
             onClick={() =>
-              setSelectedTool("erase")
+              setSelectedTool(
+                "erase"
+              )
             }
           >
             Erase
@@ -276,7 +428,20 @@ function GridEditor() {
           <br />
           <br />
 
-          <button onClick={clearGrid}>
+          {/* SAVE */}
+          <button
+            onClick={saveToBackend}
+          >
+            Save House
+          </button>
+
+          <br />
+          <br />
+
+          {/* CLEAR */}
+          <button
+            onClick={clearGrid}
+          >
             Clear All
           </button>
         </div>

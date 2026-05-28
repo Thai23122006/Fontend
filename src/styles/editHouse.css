@@ -164,8 +164,6 @@ body {
 
   border-radius: 10px;
 
-  background: #2563eb;
-
   color: white;
 
   cursor: pointer;
@@ -179,6 +177,38 @@ body {
   opacity: 0.9;
 }
 
+/* tool colors */
+
+.wall-btn {
+  background: #111827;
+}
+
+.bedroom-btn {
+  background: #60a5fa;
+}
+
+.kitchen-btn {
+  background: #f59e0b;
+}
+
+.bathroom-btn {
+  background: #10b981;
+}
+
+.door-btn {
+  background: #92400e;
+}
+
 .erase-btn {
-  background: #dc2626 !important;
+  background: #dc2626;
+}
+
+/* active tool */
+
+.active-tool {
+  transform: scale(1.05);
+
+  border: 3px solid white !important;
+
+  box-shadow: 0 0 0 3px #111827;
 }
