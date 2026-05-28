@@ -13,7 +13,7 @@ function generateFakeDetection() {
   return {
     x: Math.floor(Math.random() * 400),
     y: Math.floor(Math.random() * 250),
-    width: 150,
+    width: 50,
     height: 120,
     label: "Bottle",
   };

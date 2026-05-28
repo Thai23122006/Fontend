@@ -3,12 +3,12 @@ function GuideBox() {
     <div className="card">
       <h2>Hướng dẫn</h2>
 
-      <p>
+      {/* <p className="guide-text">
         Hiển thị nội dung:
-      </p>
+      </p> */}
 
-      <p>
-        turn left, turn right...
+      <p className="guide-direction">
+        
       </p>
     </div>
   );
